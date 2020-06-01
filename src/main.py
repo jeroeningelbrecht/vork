@@ -50,6 +50,17 @@ src="https://actions.google.com/sounds/v1/weather/thunder_crack.ogg"
                         </par>
                     </speak>"""}
 
+        elif action == 'room_handling':
+            session_data_context = list(
+                filter(
+                      lambda outputContext: outputContext['name'] == '{}{}'
+                      .format(session, CONTEXT_PATH),
+                      result['outputContexts'])
+                    )[0]
+            session_data = session_data_context['parameters']['data']
+            parameters = result.get('parameters')
+            reply = respond_to_room_action(parameters, session, session_data)
+
         elif action == 'direction_handling':
             session_data_context = list(
                 filter(
@@ -160,5 +171,44 @@ def respond_to_name(name, session):
             }
         ]
     }
+    return response
 
+
+def respond_to_room_action(parameters, session, session_data):
+    name = session_data['name']
+    current_room_id = session_data['current_room_id']
+
+    interactive_object_dialog_id = parameters.get('interactive_object')
+    accessory = parameters.get('accessory')
+    interaction = parameters.get('interaction')
+
+    found_room = room_map.RoomMap.room(current_room_id)
+    found_interactive_object = found_room.interactiveObject(interactive_object_dialog_id)
+
+    print('{}, {}, {}, {}, {}, {}, {}'.format(name, current_room_id,
+            interactive_object_dialog_id, accessory, interaction,
+            found_room, found_interactive_object))
+
+    response = {
+        'fulfillmentText': """
+            <speak>
+                <p><s>accessoire: {}</s></p>
+                <p><s>actie: {}</s></p>
+                <p><s>object: {}</s></p>
+                <p><s>{}</s></p>
+            </speak>
+        """.format(accessory, interaction, interactive_object_dialog_id, found_interactive_object.handle_behaviour(interaction)),
+        'outputContexts': [
+            {
+                'name': "{}{}".format(session, CONTEXT_PATH),
+                'lifespanCount': 99,
+                'parameters': {
+                    'data': {
+                        'name': '{}'.format(name),
+                        'current_room_id': '{}'.format(current_room_id)
+                    }
+                }
+            }
+        ]
+    }
     return response

@@ -13,6 +13,12 @@ class Room():
                            Direction.BACK: back_room_id,
                            Direction.LEFT: left_room_id}
 
+    def interactiveObject(self, interactive_object_dialog_id):
+        if self.object.dialog_id == interactive_object_dialog_id:
+            return self.object
+        else:
+            return None
+
     def str(self):
         if self.object:
             return '{} met daarin {}'.format(self.description,
