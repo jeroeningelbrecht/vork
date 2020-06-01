@@ -13,5 +13,4 @@ class InteractiveObject():
             return '{} doet dat niet'.format(self.description)
 
     def str(self):
-        return 'ik ben {} met een gezondheid van {}'.format(self.description,
-                                                            self.health)
+        return '{}'.format(self.description)

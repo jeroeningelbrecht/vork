@@ -14,6 +14,8 @@ class Room():
                            Direction.LEFT: left_room_id}
 
     def str(self):
-        return '{} met daarin {}'.format(self.description,
-                                         self.object.str() if self.object
-                                         else '')
+        if self.object:
+            return '{} met daarin {}'.format(self.description,
+                                             self.object.str())
+        else:
+            return '{}'.format(self.description)
