@@ -28,7 +28,11 @@ class RoomMap:
                          left_room_id=None
                          ),
       ROOM_CHEST_1: Room(description="in een mooie kamer",
-                         object=chest.Chest('een kist.  Probeer de kist maar eens te openen.', {behaviours.Behaviours.OPEN: 'de kist wordt geopend'}),
+                         object=chest.Chest("""een kist.  Probeer de kist maar
+                                            eens te openen.""",
+                                            {behaviours.Behaviours.OPEN: """de
+                                                kist wordt geopend"""
+                                             }),
                          up_room_id=DARK_ROOM_TROLL_1,
                          right_room_id=None,
                          back_room_id=None,

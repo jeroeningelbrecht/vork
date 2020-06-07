@@ -9,6 +9,7 @@ class Accessory:
         return self.description
 
 
-CANDLE = Accessory(id="kaars", description="een kaars")
-KNIVE = Accessory(id="mes", description="een mes")
-SWORD = Accessory(id="zwaard", description="een zwaard")
+class Accessories():
+    CANDLE = Accessory(id="candle", description="een kaars")
+    KNIFE = Accessory(id="knife", description="een mes")
+    SWORD = Accessory(id="sword", description="een zwaard")

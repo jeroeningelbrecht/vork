@@ -1,6 +1,7 @@
 import unittest
 import json
 
+
 class TestStringMethods(unittest.TestCase):
 
     @classmethod
@@ -22,6 +23,7 @@ class TestStringMethods(unittest.TestCase):
         correct_output_context = filter(lambda outputContext:outputContext['name'] == '{}{}'.format(session,context_path), result['outputContexts'])
         self.assertIsNotNone(correct_output_context)
         print(list(correct_output_context)[0]['name'])
+
 
 if __name__ == '__main__':
     unittest.main()

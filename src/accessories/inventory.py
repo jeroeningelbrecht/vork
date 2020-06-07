@@ -7,6 +7,8 @@ class Inventory:
         self.current_accessory = None
 
     def add(self, accessory: Accessory):
+        # this means you can only have 1 accessory of a particular kind like
+        # 1 candle, or 1 sword, or ...
         self.inventory[accessory.id] = accessory
 
     def str(self):

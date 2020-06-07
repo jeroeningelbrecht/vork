@@ -7,9 +7,9 @@ class InteractiveObject():
         self.health = 100
         self.dialog_id = 'object'
 
-    def handle_behaviour(self, behaviour):
-        if behaviour in self.behaviour:
-            return self.behaviour.get(behaviour)
+    def handle_behaviour(self, behaviour_id):
+        if behaviour_id in self.behaviour:
+            return self.behaviour.get(behaviour_id)
         else:
             return '{} doet dat niet'.format(self.description)
 
