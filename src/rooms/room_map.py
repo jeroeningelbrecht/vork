@@ -1,7 +1,7 @@
 from .room import Room
 from interactive_objects import chest, behaviours
-
 from .direction import Direction
+from .room_state import RoomState
 
 
 class RoomMap:
@@ -25,20 +25,23 @@ class RoomMap:
                          up_room_id=ROOM_CHEST_1,
                          right_room_id=None,
                          back_room_id=None,
-                         left_room_id=None
+                         left_room_id=None,
+                         room_state=RoomState.END
                          ),
       ROOM_CHEST_1: Room(description="in een mooie kamer",
                          object=chest.Chest("""een kist.  Probeer de kist maar
                                             eens te openen.""",
-                                            {behaviours.Behaviours.OPEN: """de
-                                                kist wordt geopend"""
+                                            {behaviours.Behaviours.OPEN:{
+                                                behaviours.Behaviour.ACTIONS: ['invent.add(accessory.Accessories.CANDLE)', 'current_room.set_state(RoomState.END)'],
+                                                behaviours.Behaviour.UTTER: """de
+                                                                        kist wordt geopend"""}
                                              }),
                          up_room_id=DARK_ROOM_TROLL_1,
                          right_room_id=None,
                          back_room_id=None,
                          left_room_id=None
                          ),
-      DARK_ROOM_TROLL_1: Room(description="in een donkere kamer",
+      DARK_ROOM_TROLL_1: Room(description="een donkere kamer met daarin een trol maar daarover later meer",
                               object=None,
                               up_room_id=BIG_HALLWAY,
                               right_room_id=None,
@@ -60,8 +63,10 @@ class RoomMap:
             return None
         else:
             current_room = RoomMap._rooms[current_room_id]
-            next_room_id = current_room.directions[direction]
-
+            if current_room.isRequirementMet():
+                next_room_id = current_room.directions[direction]
+            else:
+                next_room_id = current_room_id
             return next_room_id
 
     def room(room_id):

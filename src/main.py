@@ -182,12 +182,12 @@ def respond_to_room_action(parameters, session, session_data):
     accessory = parameters.get('accessory')
     interaction = parameters.get('interaction')
 
-    found_room = room_map.RoomMap.room(current_room_id)
-    found_interactive_object = found_room.interactiveObject(interactive_object_dialog_id)
+    current_room = room_map.RoomMap.room(current_room_id)
+    found_interactive_object = current_room.interactiveObject(interactive_object_dialog_id)
 
     print('{}, {}, {}, {}, {}, {}, {}'.format(name, current_room_id,
             interactive_object_dialog_id, accessory, interaction,
-            found_room, found_interactive_object))
+            current_room, found_interactive_object))
 
     response = {
         'fulfillmentText': """
@@ -197,7 +197,7 @@ def respond_to_room_action(parameters, session, session_data):
                 <p><s>object: {}</s></p>
                 <p><s>{}</s></p>
             </speak>
-        """.format(accessory, interaction, interactive_object_dialog_id, found_interactive_object.handle_behaviour(interaction)),
+        """.format(accessory, interaction, interactive_object_dialog_id, found_interactive_object.handle_behaviour(interaction, current_room_id)),
         'outputContexts': [
             {
                 'name': "{}{}".format(session, CONTEXT_PATH),
