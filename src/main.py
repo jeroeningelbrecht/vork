@@ -1,6 +1,6 @@
 from flask import jsonify
-# import interactive_objects
-from rooms import room_map
+from rooms import room, room_map
+from accessories import inventory, accessory
 
 CONTEXT_PATH = '/contexts/_actions_on_google'
 
@@ -58,6 +58,7 @@ src="https://actions.google.com/sounds/v1/weather/thunder_crack.ogg"
                       result['outputContexts'])
                     )[0]
             session_data = session_data_context['parameters']['data']
+            restore_room(session_data)
             parameters = result.get('parameters')
             reply = respond_to_room_action(parameters, session, session_data)
 
@@ -69,6 +70,7 @@ src="https://actions.google.com/sounds/v1/weather/thunder_crack.ogg"
                       result['outputContexts'])
                     )[0]
             session_data = session_data_context['parameters']['data']
+            restore_room(session_data)
             direction = result.get('parameters').get('direction')
             reply = respond_to_direction(direction, session, session_data)
 
@@ -82,9 +84,10 @@ src="https://actions.google.com/sounds/v1/weather/thunder_crack.ogg"
 
 def respond_to_direction(direction, session, session_data):
     name = session_data['name']
-    current_room_id = session_data['current_room_id']
+    current_room_id = session_data['current_room']['current_room_id']
     next_id = room_map.RoomMap.next_room_id(direction, current_room_id)
     next_room = room_map.RoomMap.room(next_id)
+    inventory = restore_inventory(session_data)
 
     response = {
                     'fulfillmentText': """
@@ -102,23 +105,13 @@ def respond_to_direction(direction, session, session_data):
                     """
                     .format(name, next_room.str()),
 
-                    'outputContexts': [
-                        {
-                            'name': "{}{}".format(session, CONTEXT_PATH),
-                            'lifespanCount': 99,
-                            'parameters': {
-                                'data': {
-                                    'name': '{}'.format(name),
-                                    'current_room_id': '{}'.format(next_id)
-                                }
-                            }
-                        }
-                    ]
+                    'outputContexts': create_output_contexts(session, name, next_id, next_room, inventory)
                 }
     return response
 
 
 def respond_to_name(name, session):
+    room = room_map.RoomMap.room(room_map.RoomMap.DARK_ALLEY_1)
     response = {
         'fulfillmentText': """<speak>
             <par>
@@ -151,43 +144,34 @@ def respond_to_name(name, session):
                         <p><s>Je kan je voortbewegen naar voor <break time="750ms" />
                                 achter <break time="750ms" />
                                 links en rechts</s></p>
-                        <p><s>Zeg maar eens: ik wil naar voor om naar de volgende kamer te gaan</s></p>
+                        <p><s>Om naar de volgende kamer te gaan, zeg je: ik wil naar voor</s></p>
                     </speak>
                 </media>
             </par>
         </speak>"""
-        .format(name, room_map.RoomMap.room(room_map.RoomMap.DARK_ALLEY_1).str()),
+        .format(name, room.str()),
 
-        'outputContexts': [
-            {
-                'name': "{}{}".format(session, CONTEXT_PATH),
-                'lifespanCount': 99,
-                'parameters': {
-                    'data': {
-                                'name': '{}'.format(name),
-                                'current_room_id': room_map.RoomMap.DARK_ALLEY_1
-                            }
-                }
-            }
-        ]
+        'outputContexts': create_output_contexts(session, name, room_map.RoomMap.DARK_ALLEY_1, room, inventory.Inventory())
     }
     return response
 
 
 def respond_to_room_action(parameters, session, session_data):
     name = session_data['name']
-    current_room_id = session_data['current_room_id']
+    current_room_id = session_data['current_room']['current_room_id']
 
     interactive_object_dialog_id = parameters.get('interactive_object')
     accessory = parameters.get('accessory')
     interaction = parameters.get('interaction')
 
-    current_room = room_map.RoomMap.room(current_room_id)
-    found_interactive_object = current_room.interactiveObject(interactive_object_dialog_id)
+    inventory = restore_inventory(session_data)
 
-    print('{}, {}, {}, {}, {}, {}, {}'.format(name, current_room_id,
-            interactive_object_dialog_id, accessory, interaction,
-            current_room, found_interactive_object))
+    current_room = room_map.RoomMap.room(current_room_id)
+    if interactive_object_dialog_id and interactive_object_dialog_id != '':
+        found_interactive_object = current_room.interactiveObject(interactive_object_dialog_id)
+        utter_action_result = found_interactive_object.handle_behaviour(interaction, current_room_id, inventory)
+    else:
+        utter_action_result = current_room.handle_behaviour(interaction)
 
     response = {
         'fulfillmentText': """
@@ -197,18 +181,46 @@ def respond_to_room_action(parameters, session, session_data):
                 <p><s>object: {}</s></p>
                 <p><s>{}</s></p>
             </speak>
-        """.format(accessory, interaction, interactive_object_dialog_id, found_interactive_object.handle_behaviour(interaction, current_room_id)),
-        'outputContexts': [
+        """.format(accessory, interaction, interactive_object_dialog_id, utter_action_result),
+        'outputContexts': create_output_contexts(session, name, current_room_id, current_room, inventory)
+    }
+    return response
+
+
+def create_output_contexts(session, name, room_id, room: room.Room, inventory: inventory.Inventory):
+    outputcontexts = [
             {
                 'name': "{}{}".format(session, CONTEXT_PATH),
                 'lifespanCount': 99,
                 'parameters': {
-                    'data': {
-                        'name': '{}'.format(name),
-                        'current_room_id': '{}'.format(current_room_id)
-                    }
+                              'data': {
+                                        'name': '{}'.format(name),
+                                        'current_room': {
+                                                          'current_room_id': '{}'.format(room_id),
+                                                          'current_room_state': '{}'.format(room.get_state())
+                                                        },
+                                        'inventory': list(inventory.get_inventory().keys())
+                                        },
+
                 }
             }
         ]
-    }
-    return response
+    return outputcontexts
+
+
+def restore_room(session_data):
+    current_room_info = session_data['current_room']
+    current_room_id = current_room_info['current_room_id']
+    current_room_state = current_room_info['current_room_state']
+
+    current_room = room_map.RoomMap.room(current_room_id)
+    current_room.set_state(current_room_state)
+
+
+def restore_inventory(session_data):
+    invent = inventory.Inventory()
+    session_inventory_accessory_ids = session_data['inventory']
+    for accessory_id in session_inventory_accessory_ids:
+        invent.add(accessory.Accessories.get_accessory(accessory_id))
+
+    return invent

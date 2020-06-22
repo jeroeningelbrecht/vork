@@ -32,7 +32,7 @@ class RoomMap:
                          object=chest.Chest("""een kist.  Probeer de kist maar
                                             eens te openen.""",
                                             {behaviours.Behaviours.OPEN:{
-                                                behaviours.Behaviour.ACTIONS: ['invent.add(accessory.Accessories.CANDLE)', 'current_room.set_state(RoomState.END)'],
+                                                behaviours.Behaviour.ACTIONS: ['inventory.add(accessory.Accessories.CANDLE)', 'current_room.set_state(room_state.RoomState.END)'],
                                                 behaviours.Behaviour.UTTER: """de
                                                                         kist wordt geopend"""}
                                              }),
@@ -43,10 +43,14 @@ class RoomMap:
                          ),
       DARK_ROOM_TROLL_1: Room(description="een donkere kamer met daarin een trol maar daarover later meer",
                               object=None,
-                              up_room_id=BIG_HALLWAY,
-                              right_room_id=None,
+                              up_room_id=None,
+                              right_room_id=BIG_HALLWAY,
                               back_room_id=None,
-                              left_room_id=None
+                              left_room_id=None,
+                              behaviour={behaviours.Behaviours.LIGHT: {
+                                  behaviours.Behaviour.ACTIONS: ['self.set_state(RoomState.END)'],
+                                  behaviours.Behaviour.UTTER: 'het licht gaat aan'}
+                               }
                               ),
       BIG_HALLWAY: Room(description="in een grote hal",
                         object=None,
